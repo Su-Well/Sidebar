@@ -105,6 +105,10 @@
 		"message"       : "以树视图管理标签页",
 		"description"   : ""
 	},
+	"tabsWindowedTreeModeButton" : {
+		"message"       : "Organize tabs by tree view (current window)",
+		"description"   : ""
+	},
 	"bookmarksControlsBookmarkThis" : {
 		"message"       : "将此标签页加入书签",
 		"description"   : ""

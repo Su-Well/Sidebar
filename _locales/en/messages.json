@@ -105,6 +105,10 @@
 		"message"       : "Organize tabs in tree view",
 		"description"   : ""
 	},
+	"tabsWindowedTreeModeButton" : {
+		"message"       : "Organize tabs by tree view (current window)",
+		"description"   : ""
+	},
 	"bookmarksControlsBookmarkThis" : {
 		"message"       : "Bookmark this tab",
 		"description"   : ""

@@ -328,6 +328,7 @@ nav {
 			.plain #tabs-plain::before,
 			.domain #tabs-domain::before,
 			.tree #tabs-tree::before,
+			.windowedTree #tabs-windowedTree::before,
 			.plain #rss-plain::before,
 			.domain #rss-domain::before,
 			.plain #pocket-plain::before,
@@ -346,6 +347,7 @@ nav {
 				background-color: var(--background-color-active);
 			}
 
+.windowedTree-view.moved>.folder-content .folder,
 .tree-view.moved>.folder-content .folder{
 	display: none!important;
 }
@@ -356,6 +358,7 @@ nav {
 		display: block;
 	}
 	.hidden-view>.folder-content,
+	.tabs #root-folder>div>.windowedTree-view>.folder-content,
 	.tabs #root-folder>div>.tree-view>.folder-content {
 		margin-left: 0;
 		border-left: none;
@@ -364,6 +367,7 @@ nav {
 		display: none;
 	}
 	.moved.hidden-view>.folder-content,
+	.moved.windowedTree-view>.folder-content,
 	.moved.tree-view>.folder-content {
 		display: block;
 	}

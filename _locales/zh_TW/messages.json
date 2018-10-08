@@ -105,6 +105,10 @@
 		"message"       : "以樹形檢視組織分頁",
 		"description"   : ""
 	},
+	"tabsWindowedTreeModeButton" : {
+		"message"       : "Organize tabs by tree view (current window)",
+		"description"   : ""
+	},
 	"bookmarksControlsBookmarkThis" : {
 		"message"       : "將此分頁加入書籤",
 		"description"   : ""

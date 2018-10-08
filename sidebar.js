@@ -491,7 +491,7 @@ const initBlock = {
 				else
 					rootFolder.lastChild.insertBefore(tab, rootFolder.lastChild.children[info.newIndex + 1]);
 			}
-			else if (options.misc.tabsMode === 'tree') {
+			else if (options.misc.tabsMode === 'tree' || options.misc.tabsMode === 'windowedTree') {
 				if (info.newIndex < info.oldIndex)
 					rootFolder.lastChild.insertBefore(tab.parentNode.parentNode, rootFolder.lastChild.children[info.newIndex]);
 				else
@@ -503,20 +503,20 @@ const initBlock = {
 			return {
 				id     : tab.id,
 				pid    : tab.opener,
-				view   : 'tree',
+				view   : options.misc.tabsMode,
 				folded : false
 			};
 		};
 
 		const checkForTree  = (tabs, folders, view) => {
 			setBlockClass(view);
-			if (view !== 'tree')
+			if (view !== 'tree' && view !== 'windowedTree')
 				setView(view, tabs, folders);
 			else {
 				let fakeFolders = [];
 				for (let i = 0, l = tabs.length; i < l; i++)
 					fakeFolders.push(fakeFolder(tabs[i]));
-				setView('tree', tabs, fakeFolders);
+				setView(options.misc.tabsMode, tabs, fakeFolders);
 			}
 		};
 
@@ -529,7 +529,7 @@ const initBlock = {
 
 		messageHandler.tabs   = {
 			created    : info => {
-				if (options.misc.tabsMode === 'tree')
+				if (options.misc.tabsMode === 'tree' || options.misc.tabsMode === 'windowedTree')
 					insertFolders([fakeFolder(info.tab)], true);
 				insertItems([info.tab]);
 			},
@@ -576,10 +576,10 @@ const initBlock = {
 			},
 			removed      : info => {
 				const removing = {
-					plain  : tab => {
+					plain        : tab => {
 						removeById(info.id);
 					},
-					domain : tab => {
+					domain       : tab => {
 						const pid    = tab.parentNode.parentNode.firstChild.dataset.id;
 						const folder = getFolderById(pid);
 						removeById(info.id);
@@ -589,13 +589,16 @@ const initBlock = {
 						else
 							folder.firstChild.classList.remove('active');
 					},
-					tree   : tab => {
+					tree         : tab => {
 						const folder = tab.parentNode;
 						for (let i = 0, l = folder.children.length; i < l; i++)
 							if (folder.children[i].classList.contains('folder'))
 								folder.parentNode.insertBefore(folder.children[i], folder);
 						folder.parentNode.removeChild(folder);
 						removeById(info.id);
+					},
+                    windowedTree : function(tab) {
+                        this.tree(tab);
 					}
 				};
 				const tab = getById(info.id);
@@ -675,10 +678,13 @@ const initBlock = {
 						folder.lastChild.insertBefore(tab, folder.lastChild.firstChild);
 					else
 						folder.lastChild.appendChild(tab);
-				}
-			};
+				},
+				windowedTree : function(i) {
+                    this.tree(i);
+                }
+            };
 
-			for (let i = 0, l = tabs.length; i < l; i++) {
+            for (let i = 0, l = tabs.length; i < l; i++) {
 				tab = getById(tabs[i].id);
 				if (tab === false)
 					tab = createById(tabs[i].id);
@@ -703,6 +709,7 @@ const initBlock = {
 		makeButton('plain', 'tabs', 'bottom');
 		makeButton('domain', 'tabs', 'bottom');
 		makeButton('tree', 'tabs', 'bottom');
+        makeButton('windowedTree', 'tabs', 'bottom');
 
 		checkForTree(info.tabs, info.tabsFolders, options.misc.tabsMode);
 		finishBlock('tabs');
@@ -1638,7 +1645,7 @@ function setView(view, items, folders) {
 	}
 	clearData();
 	if (view !== 'plain')
-		insertFolders(folders, view === 'tree');
+		insertFolders(folders, view === 'tree' || view === 'windowedTree');
 	insertItems(items, 'first');
 }
 
@@ -1771,7 +1778,7 @@ function moveItem(mode, eventTarget) {
 	const moveItemOverFolder = event => {
 		event.preventDefault();
 		let target = event.target;
-		if (isFolder || options.misc.tabsMode === 'tree') {
+		if (isFolder || options.misc.tabsMode === 'tree' || options.misc.tabsMode === 'windowedTree') {
 			if (target.classList.contains('item'))
 				target = target.parentNode.parentNode;
 			else if (target.classList.contains('folder-name'))
@@ -1858,12 +1865,12 @@ function moveItem(mode, eventTarget) {
 	const setListeners = {
 		tabs      : _ => {
 			const modes = {
-				plain  : _ => {
+				plain        : _ => {
 					block.addEventListener('mouseover', moveItemOverFolder);
 					doc.addEventListener('mousedown', getIndex);
 					block.addEventListener('click', stopClick);
 				},
-				domain : _ => {
+				domain       : _ => {
 					block.addEventListener('mouseover', moveItemOverFolder);
 					if (isFolder)
 						doc.addEventListener('mousedown', getIndex);
@@ -1871,10 +1878,15 @@ function moveItem(mode, eventTarget) {
 						doc.addEventListener('mousedown', getSiblings);
 					block.addEventListener('click', stopClick);
 				},
-				tree   : _ => {
+				tree         : _ => {
 					block.addEventListener('mouseover', moveItemOverFolder);
 					doc.addEventListener('mousedown', getSiblings);
 					block.addEventListener('click', stopClick);
+				},
+				windowedTree : _ => {
+                block.addEventListener('mouseover', moveItemOverFolder);
+                doc.addEventListener('mousedown', getSiblings);
+                block.addEventListener('click', stopClick);
 				}
 			};
 			modes[options.misc.tabsMode]();
@@ -1912,7 +1924,7 @@ function moveItem(mode, eventTarget) {
 	}
 	else if (eventTarget.classList.contains('folder-name'))
 		item = eventTarget.parentNode;
-	const isFolder = item.classList.contains('folder') && (options.sidebar.mode !== 'tabs' || options.misc.tabsMode !== 'tree');
+	const isFolder = item.classList.contains('folder') && (options.sidebar.mode !== 'tabs' || (options.misc.tabsMode !== 'tree' && options.misc.tabsMode !== 'windowedTree'));
 	const id       = item.dataset.id;
 	const folder   = item.parentNode;
 	let   oldIndex = -1;
@@ -2114,7 +2126,11 @@ const buttonsEvents = {
 		tree: event => {
 			if (options.misc.tabsMode !== 'tree')
 				send('background', 'options', 'handler', {'section': 'misc', 'option': 'tabsMode', 'value': 'tree'});
-		}
+		},
+        windowedTree: event => {
+            if (options.misc.tabsMode !== 'windowedTree')
+                send('background', 'options', 'handler', {'section': 'misc', 'option': 'tabsMode', 'value': 'windowedTree'});
+        }
 	},
 	bookmarks : {
 		move : event => {

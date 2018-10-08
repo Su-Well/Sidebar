@@ -105,6 +105,10 @@
 		"message"       : "Отображать вкладки в виде дерева",
 		"description"   : ""
 	},
+	"tabsWindowedTreeModeButton" : {
+		"message"       : "Organize tabs by tree view (current window)",
+		"description"   : ""
+	},
 	"bookmarksControlsBookmarkThis" : {
 		"message"       : "Сделать закладку",
 		"description"   : ""

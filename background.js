@@ -535,7 +535,7 @@ const options = {
 		tabsMode           : {
 			value   : 'domain',
 			type    : 'select',
-			values  : ['plain', 'domain', 'tree'],
+			values  : ['plain', 'domain', 'tree', 'windowedTree'],
 			targets : [],
 			handler : 'view',
 			hidden  : true
@@ -2179,6 +2179,9 @@ const initService = {
 								brauzer.tabs.move(id, {'index': newIndex});
 							else
 								brauzer.tabs.move(id, {'index': newIndex + 1});
+						},
+                        windowedTree : function(_) {
+                            this.tree(_)
 						}
 					};
 
@@ -2193,17 +2196,18 @@ const initService = {
 			};
 
 			i18n.tabs = {
-				new        : getI18n('tabsNew'),
-				fav        : getI18n('tabsControlsFav'),
-				move       : getI18n('tabsControlsMove'),
-				reload     : getI18n('tabsControlsReload'),
-				pin        : getI18n('tabsControlsPin'),
-				unpin      : getI18n('tabsControlsUnpin'),
-				close      : getI18n('tabsControlsClose'),
-				closeAll   : getI18n('tabsControlsCloseAll'),
-				plain      : getI18n('tabsPlainModeButton'),
-				domain     : getI18n('tabsDomainModeButton'),
-				tree       : getI18n('tabsTreeModeButton')
+				new          : getI18n('tabsNew'),
+				fav          : getI18n('tabsControlsFav'),
+				move         : getI18n('tabsControlsMove'),
+				reload       : getI18n('tabsControlsReload'),
+				pin          : getI18n('tabsControlsPin'),
+				unpin        : getI18n('tabsControlsUnpin'),
+				close        : getI18n('tabsControlsClose'),
+				closeAll     : getI18n('tabsControlsCloseAll'),
+				plain        : getI18n('tabsPlainModeButton'),
+				domain       : getI18n('tabsDomainModeButton'),
+				tree         : getI18n('tabsTreeModeButton'),
+                windowedTree : getI18n('tabsWindowedTreeModeButton')
 			};
 
 			modeData.tabs = _ => {
@@ -2211,7 +2215,7 @@ const initService = {
 					mode             : 'tabs',
 					timeStamp        : status.timeStamp.tabs,
 					i18n             : i18n.tabs,
-					tabs             : data.tabs,
+					tabs             : filterTabs(data.tabs),
 					tabsFolders      : data.tabsFolders,
 					domains          : data.tabsDomains,
 					activeTabId      : status.activeTabsIds[status.activeWindow]
@@ -2310,8 +2314,8 @@ const initService = {
 				if (checkStartPage(tab) === true)
 					brauzer.tabs.update(tab.id, {url: config.extensionStartPage});
 			const newTab = createById('tabs', tab, 'last');
-			send('sidebar', 'tabs', 'created', {'tab': newTab});
-			return newTab;
+                send('sidebar', 'tabs', 'created', {'tab': newTab});
+                return newTab;
 		};
 
 		const onActivated       = tabInfo => {
@@ -2423,16 +2427,27 @@ const initService = {
 		const onMoved           = (id, moveInfo) => {
 			makeTimeStamp('tabs');
 			moveFromTo('tabs', moveInfo.fromIndex, moveInfo.toIndex);
+			if (options.misc.tabsMode.value === 'windowedTree')
+				reInit(id);
 			send('sidebar', 'tabs', 'moved', {'id': id, 'oldIndex': moveInfo.fromIndex, 'newIndex': moveInfo.toIndex, 'isFolder': false});
 		};
 
 		const getTabs           = tabs => {
 			for (let i = 0, l = tabs.length; i < l; i++)
-				createTab(tabs[i], true);
+                createTab(tabs[i], true);
 			initTabs();
 		};
 
-		if (status.init.tabs === false) {
+		const filterTabs        = tabs => {
+            if (options.misc.tabsMode.value === 'windowedTree') {
+                return tabs.filter(tab => tab.windowId === status.activeWindow);
+            }
+            else {
+                return data.tabs;
+            }
+        };
+
+		if (status.init.tabs === false ) {
 			updateItem.tabs = (newItem, item) => {
 				const url    = item.url === 'about:blank' ? item.title : item.url;
 				const domain = makeDomain('tabs', url, item.favIconUrl);
